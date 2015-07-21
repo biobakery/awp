@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
+    <style type="text/css">
+      .node rect {
+	stroke: #333;
+	fill: #fff;
+      }
+
+      .edgePath path {
+	stroke: #333;
+	fill: #333;
+	stroke-width: 1.5px;
+      }
+    </style>
+
+  </head>
+  <body>
+    <h1>AnADAMA Web Portal</h1>
+
+    <div id="messages"></div>
+    
+    <div class="dropdown">
+      <button id="project_dropdown" class="btn btn-default dropdown-toggle"
+	      type="button" data-toggle="dropdown" foo="bar"
+	      onclick="load_projects(this);"
+	      aria-haspopup="true" aria-expanded="true">
+	Available Projects
+	<span class="caret"></span>
+      </button>
+      <ul id="available_projects" class="dropdown-menu"
+	  style="text-align: center;" aria-labelledby="project_dropdown">
+	<img src="loader.gif", alt="Loading projects...">
+      </ul>
+    </div>
+
+    <div id="dag">
+      <svg width=960 height=600><g/></svg>
+    </div>
+
+    <div id="events">
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="dagre-d3.min.js"></script>    
+    <script src="awp.js"></script>
+  </body>
+</html>
