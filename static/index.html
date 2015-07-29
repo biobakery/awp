@@ -17,36 +17,73 @@
 	fill: #333;
 	stroke-width: 1.5px;
       }
+
+      .axis path,
+      .axis line {
+	  fill: none;
+	  stroke: #222;
+	  shape-rendering: crispEdges;
+      }
+
+      .dot {
+	  stroke: #000;
+      }
+
+      .pointy {
+          cursor: pointer;
+      }
+
     </style>
 
   </head>
   <body>
-    <h1>AnADAMA Web Portal</h1>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+	<!-- Brand and toggle get grouped for better mobile display -->
+	<div class="navbar-header">
+	  <a class="navbar-brand" href="#">AnADAMA Web Portal</a>
+	</div>
 
-    <div id="messages"></div>
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	  <ul class="nav navbar-nav">
+	    <li class="dropdown">
+              <a href="#" class="dropdown-toggle"
+		 data-toggle="dropdown" role="button"
+		 aria-haspopup="true" onclick="load_projects(this);"
+		 aria-expanded="false">
+		Available Projects <span class="caret"></span>
+	      </a>
+	      <ul id="available_projects" class="dropdown-menu"
+		  style="text-align: center;"
+		  aria-labelledby="project_dropdown">
+		<img src="loader.gif", alt="Loading projects...">
+              </ul>
+            </li>
+	  </ul>
+	</div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
     
-    <div class="dropdown">
-      <button id="project_dropdown" class="btn btn-default dropdown-toggle"
-	      type="button" data-toggle="dropdown" foo="bar"
-	      onclick="load_projects(this);"
-	      aria-haspopup="true" aria-expanded="true">
-	Available Projects
-	<span class="caret"></span>
-      </button>
-      <ul id="available_projects" class="dropdown-menu"
-	  style="text-align: center;" aria-labelledby="project_dropdown">
-	<img src="loader.gif", alt="Loading projects...">
-      </ul>
-    </div>
+    <div class="container" role="main">
+    
+      <div class="row">
+	<div id="project_title"></div>
+	<div id="messages"></div>
+      </div> <!-- end title row -->
 
-    <div id="dag">
-      <svg width=960 height=600><g/></svg>
-    </div>
+      <div class="row">
+	<div class="col-md-9">
+	  <div id="task"></div>
+	  <div id="gannt"></div>
+	  <div id="dag"><svg width=800 height=500><g/></svg></div>
+	</div> <!-- end vis col -->
+	<div class="col-md-3">
+	  <div id="events"></div>
+	</div> <!-- end events col -->
+      </div> <!-- end events and vis row -->
 
-    <div id="events">
-    </div>
-
-
+    </div> <!-- end main container -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>

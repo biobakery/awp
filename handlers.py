@@ -87,7 +87,9 @@ class InitHandler(StatusHandler):
     def post(self, project):
         nodes = deserialize(self.request.body)
         names = [ {"name": n['name']} for n in nodes ]
-        if self.project in self.cache:
+        if project in self.cache:
+            if self.cache[project].finished:
+                self.cache[project].clear()
             self.cache[project].update_tree(nodes)
         else:
             self.cache[project] = CacheMember.from_init_event(
@@ -115,6 +117,7 @@ class FinishHandler(StatusHandler):
     def post(self, project):
         data = self.validate_project(project)
         self.cache[project].events.append(events.finish(data))
+        self.cache[project].finished = True
 
 
 class ExecuteHandler(StatusHandler):

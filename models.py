@@ -60,6 +60,8 @@ class CacheMember(SerializableMixin):
         self._sorted_tree = None
         self.tree = tree
         self.events = events
+        self.finished = False
+
 
     @classmethod
     def from_init_event(cls, nodes, maxlen=200):
@@ -85,6 +87,11 @@ class CacheMember(SerializableMixin):
         self._sorted_tree = None
 
 
+    def clear(self):
+        self.tree.clear()
+        self.events.clear()
+
+
     def _custom_serialize(self):
         return { "events": list(self.events),
                  "tree": self.tree.nodes(data=True) }
@@ -103,11 +110,13 @@ class AgeDict(dict):
 
     def clean(self, olderthan=DEFAULT_TTL):
         cutoff = time.time() - olderthan
-        i = 0
+        to_del, i = list(), 0
         for k in self:
             if self.ages[k] < cutoff:
-                del self[k]
+                to_del.append(k)
                 i += 1
+        for k in to_del:
+            del self[k]
         return i
 
     def __getitem__(self, key):
