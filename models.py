@@ -1,6 +1,6 @@
 import time
 import zipfile
-from itertools import islice
+from itertools import ifilter
 from collections import deque
 from cStringIO import StringIO
 
@@ -10,6 +10,8 @@ from networkx.algorithms.dag import topological_sort
 import events
 from util import SerializableMixin, logformat_task_dict
 
+
+not_root = lambda n: n[0] != 0
 
 class EventDeque(deque):
     """EventDeque keeps a running, fixed-length, buffer of everything
@@ -79,7 +81,7 @@ class CacheMember(SerializableMixin):
         for n in nodes:
             name = n.pop('name')
             self.tree.add_node(name, **n)
-        for child_key, data in islice(self.tree.nodes(data=True), 1, None):
+        for child_key, data in ifilter(not_root, self.tree.nodes(data=True)):
             parent_keys = data.get("task_dep", None) or [0]
             for parent_key in parent_keys:
                 if parent_key not in self.tree:
@@ -92,7 +94,7 @@ class CacheMember(SerializableMixin):
     def archive(self):
         out_f = StringIO()
         zfile = zipfile.ZipFile(out_f, 'w')
-        for name, data in islice(self.tree.nodes(data=True), 1, None):
+        for name, data in ifilter(not_root, self.tree.nodes(data=True)):
             fname = name.replace("/", ":")+".txt"
             zfile.writestr(fname, logformat_task_dict(name, data))
         zfile.close()
