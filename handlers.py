@@ -47,6 +47,17 @@ class StatusHandler(MainHandler, ProjectValidatorMixin):
         }))
 
 
+class DownloadLogHandler(MainHandler, ProjectValidatorMixin):
+    def get(self, project):
+        self.validate_project(project, do_deserialize=False)
+        self.add_header("Content-Type",
+                        "application/zip, application/octet-stream")
+        archive_f = self.cache[project].archive()
+        chunk = archive_f.read(1024*256)
+        while chunk:
+            self.write(chunk)
+            chunk = archive_f.read(1024*256)
+
 
 class SocketHandler(WebSocketHandler, ProjectValidatorMixin):
     def initialize(self, cache):
@@ -111,6 +122,8 @@ class FailHandler(StatusHandler):
         self.cache[project].events.append(events.fail(data))
         name = data['name']
         self.cache[project].tree.node[name]['status'] = status.FAIL
+        self.cache[project].tree.node[name].update(data)
+        
 
 
 class FinishHandler(StatusHandler):
@@ -126,6 +139,7 @@ class ExecuteHandler(StatusHandler):
         self.cache[project].events.append(events.execute(data))
         name = data['name']
         self.cache[project].tree.node[name]['status'] = status.WAIT
+        self.cache[project].tree.node[name].update(data)
 
 
 class SuccessHandler(StatusHandler):
@@ -134,4 +148,4 @@ class SuccessHandler(StatusHandler):
         self.cache[project].events.append(events.success(data))
         name = data['name']
         self.cache[project].tree.node[name]['status'] = status.DONE
-
+        self.cache[project].tree.node[name].update(data)

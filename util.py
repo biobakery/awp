@@ -1,3 +1,5 @@
+from cStringIO import StringIO
+
 import ujson
 
 class SerializationError(TypeError):
@@ -57,3 +59,25 @@ class SerializableMixin(object):
                 for key in self.serializable_attrs
             ])
         
+
+def logformat_task_dict(name, data):
+    log_f = StringIO()
+    print >> log_f, "Log for task "+name
+    print >> log_f, "status\t"+data.get("status")
+    print >> log_f, "\t".join([k, str(data.get("time", ""))])
+    print >> log_f, ""
+    for t in data.get('targets', []):
+        print >> log_f, "\t".join(["target"]+map(str, t))
+    print >> log_f, ""
+    for f in data.get('file_dep', []):
+        print >> log_f, "file_dep\t"+f
+    print >> log_f, ""
+    for out in data.get("outs", []):
+        print >> log_f, "="*15 + "Stdout" + "="*15
+        print >> log_f, out
+        print >> log_f, "="*36
+    for err in data.get("errs", []):
+        print >> log_f, "="*15 + "Stderr" + "="*15
+        print >> log_f, err
+        print >> log_f, "="*36
+    return log_f.getvalue()

@@ -97,18 +97,71 @@ const api = {
     }
 };
 
+const render = {
+    time : function(s){
+	return ('<p><span class="glyphicon glyphicon-time"></span>'+
+		'&nbsp; '+s+' seconds</p>');
+    }
+    , files : function(f_arr) {
+	if (f_arr.length == 0)
+	    return "";
+	var content = '<strong>Targets</strong>';
+	content += '<table style="table-layout:fixed;" class="table table-striped">';
+	content += ('<thead><tr><th style="width:75%;">Filename</th>'+
+		    '<th>Size (Bytes)</th></tr></thead>');
+	content += '<tbody>';
+	util.each(f_arr, function(f){
+	    content += '<tr>';
+	    content += '<td style="width:75%; overflow: scroll"><code>'+f[0]+'</code></td>';
+	    content += '<td>'+f[1]+'</td>';
+	    content += '</tr>';
+	});
+	content += '</tbody></table>';
+	return content;
+    }
+    , list : function(arr) {
+	var content = '<ul>';
+	util.each(arr, function(item){
+	    content += '<li>'+item+'</li>';
+	});
+	content += '</ul>';
+	return content;
+    }
+    , exception : function(s) {
+	return ('<div class="alert alert-danger"'+
+		  '<span class="glyphicon glyphicon-flash"></span>'+
+		  '&nbsp; Exception: '+s+
+		'</div>');
+    }
+    , outerr : function(s_arr, label){
+	var content = ''
+	, outs = s_arr.filter(util.id);
+	if (outs.length == 0)
+	    return '';
+	content += '<p>';
+	content += '<strong>'+label+'</strong>';
+	util.each(outs, function(str){
+	    content += '<pre>'+util.escapeHtml(str)+'</pre>';
+	});
+	content += '</p>';
+	return content;
+    }
+    , stdout : function (s_arr){return render.outerr(s_arr, 'Stdout');}
+    , stderr : function (s_arr){return render.outerr(s_arr, 'Stderr');}
+};
+
 function on_new_event_slider(e){
-    var title = e.data.name === undefined? e.type : task_basename(e.data.name)
+    var title = e.data.name === undefined? e.type : task_basename(e.data.name) + " - " + e.type
     , $events = $('#events')
     , event_template = (
 	'<div class="panel panel-{color}">'+
 	  '<div class="panel-heading">'+
-	    '<span class="glyphicon glyphicon-menu-up pull-left pointy" '+
+	    '<span class="glyphicon glyphicon-menu-down pull-left pointy" '+
 	           'onclick="toggle_event_view(this);" '+
 	           'style="padding: 2px 10px 0px 0px;"></span>'+
 	    '<h4 class="panel-title">{t}</h4>'+
 	  '</div>'+
-	  '<div class="panel-body hidden">'+
+	  '<div class="panel-body show">'+
 	    '{content}'+
 	  '</div>'+
 	'</div>');
@@ -116,22 +169,21 @@ function on_new_event_slider(e){
     var thedate = new Date(e.time*1000)
     , content = '<h4><small>'+thedate.toString()+'</small></h4>';
 
+    if (e.type == "fail")
+	content += render.exception(e.data.exc);
+
     if (e.type == "success" || e.type == "fail") {
-	content = content + '<span class="glyphicon glyphicon-time"></span> &nbsp; '+e.data.time+' seconds';
-	util.each(["outs", "errs"], function(key){
-	    var outs = e.data[key].filter(util.id)
-	    , label = key == "outs"? "Stdout" : "Stderr";
-	    if (outs.length === 0)
-		return;
-	    content = content + "<p>";
-	    content = content + "<strong>"+label+"</strong>";
-	    util.each(outs, function(str){
-		content = content + "<pre>"+util.escapeHtml(str)+"</pre>";
-	    });
-	    content = content + "</p>";
-	});
+	content += render.time(e.data.time);
+	content += render.stdout(e.data.outs);
+	content += render.stderr(e.data.errs);
     }
+
+    if (e.type == "success")
+	content += render.files(e.data.targets);
     
+    if (e.type == "execute")
+	content += render.list(e.data.file_dep);
+
     $events.prepend(
 	util.format(event_template,{t: title
 				    , color: settings.event_colors[e.type]
@@ -154,16 +206,35 @@ function show_task(t){
 	           'onclick="$(this).parent().parent().empty();"></span>'+
 	    '<h4 class="panel-title">{t}</h4>'+
 	  '</div>'+
-	  '<div class="panel-body"><pre>'+
+	  '<div class="panel-body">'+
 	    '{content}'+
-	  '</pre></div>'+
+	  '</div>'+
 	'</div>'
     );
 
+    var title = task_basename(t.data.name) + " - Status: " + t.status;
+
+    var content = '<h4><small>Started '+t.start.toString()+'</small></h4>';
+
+    if (util.has(t, "stop"))
+	content += '<h4><small>Ended '+t.stop.toString()+'</small></h4>';
+    if (util.has(t.data, "time"))
+	content += render.time(t.data.time);
+    if (util.has(t.data, "outs"))
+	content += render.stdout(t.data.outs);
+    if (util.has(t.data, "errs"))
+	content += render.stderr(t.data.errs);
+    if (util.has(t.data, "targets"))
+	content += render.files(t.data.targets);
+    if (util.has(t.data, "file_dep")){
+	content += "<strong>Dependent Files</strong>";
+	content += render.list(t.data.file_dep);
+    }
+
     $task_view.html(html.
-		    replace("{t}", task_basename(t.data.name)).
+		    replace("{t}", title).
 		    replace("{color}",settings.status_to_event_color[t.status]).
-		    replace("{content}", JSON.stringify(t, null, 2)));
+		    replace("{content}", content));
     
 }
 
@@ -216,6 +287,22 @@ function load_projects(el){
 	});
 }
 
+function switch_nav(name) {
+    $(".nav li").removeClass("active");
+    $("#"+name+"_nav").addClass("active");
+    $("div.vis_row").removeClass("show").addClass("hidden");
+    $("#"+name).removeClass("hidden").addClass("show");
+    if (name == "gannt") {
+	if ($("#gannt").children().length == 0)
+	    draw_project_gannt();
+    } else if (name == "dag") {
+	if ($("#dag > svg > g").children().length == 0)
+	    draw_project_dag();
+    } else if (name == "events") {
+	// do nothing
+    }
+}
+
 function project_route() {
     var project_name = window.location.hash.replace("#", "");
     if (project_name) return draw_project(project_name);
@@ -231,14 +318,11 @@ function stdevent(e_arr){
 }
 
 function new_event(e) {
-    util.values(settings.new_event_hooks)
-	.map(function(hook_fn){
-	    hook_fn(stdevent(e));
-	});
+    util.each(util.values(settings.new_event_hooks),
+	      function(hook_fn){ hook_fn(stdevent(e)); });
 }
 
 function subscribe_project(name) {
-    window.timeline = EventTimeline();
     settings.new_event_hooks.slider = on_new_event_slider;
     settings.new_event_hooks.timeline = window.timeline.add_event;
     var host = window.location.origin.replace("http://", "")
@@ -249,8 +333,9 @@ function subscribe_project(name) {
     };
 }
 
-function draw_project_dag(data) {
-    var nodes_obj = new Object
+function draw_project_dag() {
+    var data = window.data
+    , nodes_obj = new Object
     , svg = d3.select("#dag svg")
     , inner = d3.select("#dag g")
     , g = new dagreD3.graphlib.Graph().setGraph({rankdir:"LR"})
@@ -263,8 +348,7 @@ function draw_project_dag(data) {
     util.each(data.tree, function(n){
 	if (n[0] === 0) return;
 	g.setNode(n[0], {label: task_basename(n[0]),
-			 rx: 5, ry: 5,
-			 taskname: n[0]});
+			 rx: 5, ry: 5});
     });
     util.each(data.tree, function(n){
 	if (n[0] === 0) return;
@@ -294,52 +378,57 @@ function draw_project_dag(data) {
 	});
 }
 
-function EventTimeline(events) {
-    var lanes = [[]]
-    , tasks = {}
-    , callbacks = {};
+window.timeline = {
+    lanes: [[]]
+    , tasks: {}
+    , callbacks : {}
+    , newest : new Date()
+    , oldest : undefined
 
-    function _update_tasks(e) {
+    , _update_tasks : function (e) {
 	var t;
-	if ( ! util.has(tasks, e.data.name))
-	    t = tasks[e.data.name] = {data: {}};
+	window.timeline.newest = new Date(e.time*1000);
+	window.timeline.oldest = util.maybe(window.timeline.oldest,
+					    window.timeline.newest);
+	if ( ! util.has(window.timeline.tasks, e.data.name))
+	    t = window.timeline.tasks[e.data.name] = {data: {}};
 	else
-	    t = tasks[e.data.name];
+	    t = window.timeline.tasks[e.data.name];
 	
 	util.update(t.data, e.data);
 
 	switch (e.type) {
 	case "execute":
 	    t.status = "wait";
-	    t.start = new Date(e.time*1000);
+	    t.start = window.timeline.newest;
 	    break;
 	case "skip":
 	    t.status = "skip";
-	    t.start = t.stop = new Date(e.time*1000);
+	    t.start = t.stop = window.timeline.newest;
 	    break;
 	case "success":
 	    t.status = "done";
-	    t.stop = new Date(e.time*1000);
+	    t.stop = window.timeline.newest;
 	    break;
 	case "fail":
 	    t.status = "fail";
-	    t.stop = new Date(e.time*1000);
+	    t.stop = window.timeline.newest;
 	    break;
 	}
 	return t;
     }
 
-    function clear() {
-	lanes = [[]];
-	tasks = {};
+    , clear : function() {
+	window.timeline.lanes = [[]];
+	window.timeline.tasks = {};
     }
 
-    function _add_event(e) {
+    , _add_event : function(e) {
 	if (e.data.name === undefined) return undefined;
-	var t = _update_tasks(e);
+	var t = window.timeline._update_tasks(e);
 	if (util.has(t, "lane")) return t;
-	for (var i = 0; i < lanes.length; i++){
-	    var lane = lanes[i], latest = util.last(lane);
+	for (var i = 0; i < window.timeline.lanes.length; i++){
+	    var lane = window.timeline.lanes[i], latest = util.last(lane);
 	    if (   (latest === undefined)
 		|| (latest.stop !== undefined && latest.stop < t.start)) {
 		t.lane = i;
@@ -347,37 +436,31 @@ function EventTimeline(events) {
 		return t;
 	    }
 	}
-	t.lane = lanes.length;
-	lanes.push([t]);
+	t.lane = window.timeline.lanes.length;
+	window.timeline.lanes.push([t]);
 	return t;
     }
 
-    function add_event(e){
-	var maybe_t = _add_event(e);
+    , add_event : function(e){
+	var maybe_t = window.timeline._add_event(e);
 	if (maybe_t !== undefined)
-	    util.values(callbacks).map(function(cb) {cb(maybe_t);});
+	    util.each(util.values(window.timeline.callbacks),
+		      function(cb) { cb(maybe_t); });
     }
+};
 
-    if (events)
-	util.each(events, add_event);
-
-    return { lanes: lanes
-	     , tasks: tasks
-	     , callbacks: callbacks
-	     , add_event: add_event
-	     , clear: clear };
-}
-
-function draw_project_gannt(data) {
+function draw_project_gannt() {
     var margin = {top: 40, right: 5, bottom: 30, left: 5 }
-    , width = 800 - margin.left - margin.right
-    , height = 500 - margin.top - margin.bottom
-    , start = new Date(data.events[0][1]*1000)
-    , end = new Date(util.last(data.events)[1]*1000)
-    , timeline = window.timeline
-    , n_workers = timeline.lanes.length;
+    , width = 900 - margin.left - margin.right
+    , height = 550 - margin.top - margin.bottom
+    , start = window.timeline.oldest
+    , tl = window.timeline
+    , n_workers = tl.lanes.length;
 
-    var x = d3.time.scale().domain([start, end]).range([5, width])
+    if (start === undefined)
+	start = new Date(window.data.events[0][1]*1000);
+
+    var x = d3.time.scale().domain([start, tl.newest]).range([5, width])
     , y = d3.scale.ordinal().domain(d3.range(n_workers)).
 	    rangeRoundBands([0, height], 0.1);
 
@@ -404,7 +487,7 @@ function draw_project_gannt(data) {
 
     function setup_lanes() {
 	return svg.selectAll(".gannt").
-	    data(timeline.lanes).
+	    data(tl.lanes).
 	    enter().append("g").
 	    attr("class", "g");
     }
@@ -420,7 +503,7 @@ function draw_project_gannt(data) {
     function format_rect(selection) {
 	selection.
 	    attr("width", function(t){
-		return x(util.maybe(t.stop, end))-x(t.start);
+		return x(util.maybe(t.stop, tl.newest))-x(t.start);
 	    }).
 	    attr("height", y.rangeBand()).
 	    attr("x", function(t){ return x(t.start); }).
@@ -457,9 +540,8 @@ function draw_project_gannt(data) {
 
 
     window.timeline.callbacks.gannt = function(task) {
-	end = util.maybe(task.stop, task.start);
-	n_workers = timeline.lanes.length;
-	x = d3.time.scale().domain([start, end]).range([5, width]);
+	n_workers = tl.lanes.length;
+	x = d3.time.scale().domain([start, tl.newest]).range([5, width]);
 	y = d3.scale.ordinal().domain(d3.range(n_workers)).
 	    rangeRoundBands([0, height], 0.1);
 	xAxis = d3.svg.axis().scale(x).orient("bottom");
@@ -482,23 +564,29 @@ function draw_project_gannt(data) {
 }
 
 function draw_project(name) {
-    $("#project_title").empty().html('<h1>Project status for <a href="#'+name+'">'+name+'</a></h1>');
-    subscribe_project(name);
+    $("#project_title").empty().
+	html('<h1>Project status for <a href="#'+name+'">'+name+'</a></h1>'+
+	     '<p><a href="'+settings.api_url+'/'+name+'/log.zip"> '+
+	     '<span class="glyphicon glyphicon-download"></span>'+
+	     ' &nbsp; Download logs</a></p>');
+    
     api.get(name).
 	fail(function(_, _, reason){message("danger", reason);}).
 	done(function(data, status){
 	    if (status !== "success") return message(
 		"danger", "Unexpected project load status "+status);
-	    data.events.map(new_event);
-	    draw_project_gannt(data);
-	    draw_project_dag(data);
+	    window.data = data;
+	    subscribe_project(name);
+	    util.each(data.events, new_event);
+	    settings.new_event_hooks.reloader = function(e){
+		if (e.type == "init") window.location.reload();
+	    };
 	});
 }
 
 $(function() {
     project_route();
     window.onhashchange = project_route;
-
     window.tooltip = d3.select("body").
 	append("div").
 	style("position", "absolute").

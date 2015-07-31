@@ -72,16 +72,27 @@
 	<div id="messages"></div>
       </div> <!-- end title row -->
 
+      <ul class="nav nav-tabs">
+	<li role="presentation" id="events_nav" class="active">
+	  <a class="pointy" onclick="switch_nav('events');">Events</a>
+	</li>
+	<li role="presentation" id="gannt_nav">
+	  <a class="pointy" onclick="switch_nav('gannt');">Timeline</a>
+	</li>
+	<li role="presentation" id="dag_nav">
+	  <a class="pointy" onclick="switch_nav('dag');">Directed Graph</a>
+	</li>
+      </ul> <!-- end event timeline dag nav -->
+
       <div class="row">
-	<div class="col-md-9">
-	  <div id="task"></div>
-	  <div id="gannt"></div>
-	  <div id="dag"><svg width=800 height=500><g/></svg></div>
-	</div> <!-- end vis col -->
-	<div class="col-md-3">
-	  <div id="events"></div>
-	</div> <!-- end events col -->
-      </div> <!-- end events and vis row -->
+	<div id="task"></div>
+      </div>
+
+      <div id="events" class="col-md-9 show vis_row"></div>
+      <div id="gannt" class="hidden vis_row"></div>
+      <div id="dag" class="hidden vis_row">
+	<svg width=900 height=650><g/></svg>
+      </div>
 
     </div> <!-- end main container -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
