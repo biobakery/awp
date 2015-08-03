@@ -63,7 +63,7 @@ class SerializableMixin(object):
 def logformat_task_dict(name, data):
     log_f = StringIO()
     print >> log_f, "Log for task "+name
-    print >> log_f, "status\t"+data.get("status")
+    print >> log_f, "status\t"+data.get("status", "")
     print >> log_f, "time\t"+str(data.get("time", ""))
     print >> log_f, ""
     for t in data.get('targets', []):

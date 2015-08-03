@@ -126,8 +126,8 @@ class AgeDict(dict):
     def clean(self, olderthan=DEFAULT_TTL):
         cutoff = time.time() - olderthan
         to_del, i = list(), 0
-        for k in self:
-            if self.ages[k] < cutoff:
+        for k, age in self.ages.iteritems():
+            if age < cutoff:
                 to_del.append(k)
                 i += 1
         for k in to_del:
