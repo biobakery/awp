@@ -326,7 +326,7 @@ function subscribe_project(name) {
     settings.new_event_hooks.slider = on_new_event_slider;
     settings.new_event_hooks.timeline = window.timeline.add_event;
     var host = window.location.origin.replace("http://", "")
-    , url = "ws://"+host+"/api/"+name+"/socket"
+    , url = "ws://"+host+settings.api_url+"/"+name+"/socket"
     , sock = new WebSocket(url);
     sock.onmessage = function(event) {
 	$.parseJSON(event.data).map(new_event);
