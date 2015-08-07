@@ -351,12 +351,19 @@ function draw_project_dag() {
 			 rx: 5, ry: 5});
     });
     util.each(data.tree, function(n){
+	var the_color;
 	if (n[0] === 0) return;
 	var deps = n[1].task_dep, node = g.node(n[0]);
 	util.each(deps, function(dep){
 	    g.setEdge(dep, n[0], {label: ""});
 	});
-	node.style = "fill: " + settings.status_colors[n[1].status];
+	if (util.has(window.timeline.tasks, n[0]))
+	    the_color = settings.status_colors[
+		util.maybe(window.timeline.tasks[n[0]].status, n[1].status)
+	    ];
+	else
+	    the_color = settings.status_colors[n[1].status];
+	node.style = "fill: " + the_color;
     });
     settings.new_event_hooks.dag = function(e) {
 	if (e.data.name === undefined)
