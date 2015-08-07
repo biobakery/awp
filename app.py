@@ -54,15 +54,15 @@ def main():
     base = options.mounturl
     routes = (
         ( base,                       MainHandler,         {"cache": cache}),
-        ( base+r'([\w.]+)/?',         StatusHandler,       {"cache": cache}),
-        ( base+r'([\w.]+)/init/?',    InitHandler,         {"cache": cache}),
-        ( base+r'([\w.]+)/skip/?',    SkipHandler,         {"cache": cache}),
-        ( base+r'([\w.]+)/fail/?',    FailHandler,         {"cache": cache}),
-        ( base+r'([\w.]+)/finish/?',  FinishHandler,       {"cache": cache}),
-        ( base+r'([\w.]+)/socket/?',  SocketHandler,       {"cache": cache}),
-        ( base+r'([\w.]+)/execute/?', ExecuteHandler,      {"cache": cache}),
-        ( base+r'([\w.]+)/success/?', SuccessHandler,      {"cache": cache}),
-        ( base+r'([\w.]+)/log.zip?',  DownloadLogHandler,  {"cache": cache}),
+        ( base+r'([\w.-]+)/?',         StatusHandler,       {"cache": cache}),
+        ( base+r'([\w.-]+)/init/?',    InitHandler,         {"cache": cache}),
+        ( base+r'([\w.-]+)/skip/?',    SkipHandler,         {"cache": cache}),
+        ( base+r'([\w.-]+)/fail/?',    FailHandler,         {"cache": cache}),
+        ( base+r'([\w.-]+)/finish/?',  FinishHandler,       {"cache": cache}),
+        ( base+r'([\w.-]+)/socket/?',  SocketHandler,       {"cache": cache}),
+        ( base+r'([\w.-]+)/execute/?', ExecuteHandler,      {"cache": cache}),
+        ( base+r'([\w.-]+)/success/?', SuccessHandler,      {"cache": cache}),
+        ( base+r'([\w.-]+)/log.zip?',  DownloadLogHandler,  {"cache": cache}),
 
     )
 
