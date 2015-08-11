@@ -325,8 +325,9 @@ function new_event(e) {
 function subscribe_project(name) {
     settings.new_event_hooks.slider = on_new_event_slider;
     settings.new_event_hooks.timeline = window.timeline.add_event;
-    var host = window.location.origin.replace("http://", "")
-    , url = "ws://"+host+settings.api_url+"/"+name+"/socket"
+    var host = window.location.origin.replace(/https?:\/\//, "")
+    , scheme = window.location.origin.match(/https/)? "wss" : "ws"
+    , url = scheme+"://"+host+settings.api_url+"/"+name+"/socket"
     , sock = new WebSocket(url);
     sock.onmessage = function(event) {
 	$.parseJSON(event.data).map(new_event);
