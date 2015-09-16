@@ -96,7 +96,7 @@ class SocketHandler(WebSocketHandler, ProjectValidatorMixin):
 
 class InitHandler(StatusHandler):
     def post(self, project):
-        nodes = deserialize(self.request.body)
+        nodes = deserialize(self.request.body)['nodes']
         names = [ {"name": n['name']} for n in nodes ]
         if project in self.cache:
             if self.cache[project].finished:
